@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>捷媖教練 · 學員系統</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --teal: #00838f;
+            --teal-dark: #005f6b;
+            --teal-light: #e0f4f6;
+            --teal-mid: #b2e4ea;
+            --bg: #f0f6f7;
+            --white: #ffffff;
+            --text: #1a2e30;
+            --text-muted: #607c80;
+            --border: #cde5e8;
+            --danger: #d32f2f;
+            --danger-bg: #ffebee;
+            --success: #2e7d32;
+            --success-bg: #e8f5e9;
+            --warning: #e65100;
+            --warning-bg: #fff3e0;
+            --radius: 14px;
+            --radius-sm: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-bottom: 80px;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: var(--teal);
+            background: linear-gradient(135deg, #005f6b 0%, #00838f 60%, #00a0ae 100%);
+            color: white;
+            padding: 20px 20px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -30px; right: -30px;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -20px; left: 30%;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+        }
+        .header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+        .header-sub {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+        .user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        /* ── Nav ── */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 500px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            display: flex;
+            border-top: 1px solid var(--border);
+            height: 64px;
+            z-index: 100;
+            box-shadow: 0 -4px 16px rgba(0,131,143,0.08);
+        }
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            cursor: pointer;
+            color: var(--text-muted);
+            gap: 4px;
+            transition: color 0.2s;
+        }
+        .nav-item.active { color: var(--teal); font-weight: 700; }
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+
+        /* ── Pages ── */
+        .container { padding: 16px; max-width: 500px; margin: auto; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 4px rgba(0,131,143,0.04);
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--teal-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ── Login ── */
+        #login-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 30px 24px;
+            background: linear-gradient(160deg, #e0f4f6 0%, #f0f6f7 50%);
+        }
+        .login-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .login-logo h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 32px;
+            color: var(--teal-dark);
+            font-weight: 400;
+        }
+        .login-logo p { color: var(--text-muted); font-size: 14px; margin-top: 6px; }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0,131,143,0.1);
+        }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            background: var(--bg);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--teal); background: white; }
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: var(--teal);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:hover { background: var(--teal-dark); }
+
+        /* ── Date picker ── */
+        .date-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .date-label { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+        .date-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            background: white;
+            outline: none;
+        }
+        .date-input:focus { border-color: var(--teal); }
+
+        /* ── Time slots ── */
+        .coach-range {
+            background: var(--teal-light);
+            border: 1px solid var(--teal-mid);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-size: 13px;
+            color: var(--teal-dark);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        /* 剩餘時段視覺化 */
+        .timeline-wrap {
+            margin-bottom: 16px;
+        }
+        .timeline-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+        .timeline-bar {
+            height: 28px;
+            background: #e8e8e8;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+        .timeline-booked {
+            background: #ffcdd2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #c62828;
+            overflow: hidden;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        .timeline-free {
+            background: #b2e4ea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--teal-dark);
+            overflow: hidden;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        .time-axis {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        /* 選擇時段 */
+        .slot-picker {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .slot-picker select {
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            background: white;
+            outline: none;
+            width: 100%;
+        }
+        .slot-picker select:focus { border-color: var(--teal); }
+        .slot-picker label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 700; }
+
+        /* 已預約時段列表 */
+        .booked-section {
+            margin-top: 14px;
+        }
+        .booked-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            background: var(--warning-bg);
+            border-radius: var(--radius-sm);
+            margin-bottom: 6px;
+            border: 1px solid #ffe0b2;
+        }
+        .booked-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #e65100;
+            flex-shrink: 0;
+        }
+        .booked-time { font-size: 13px; font-weight: 700; color: var(--warning); }
+        .booked-who { font-size: 12px; color: var(--text-muted); }
+        .booked-mine { border-color: #b3e5fc; background: #e1f5fe; }
+        .booked-mine .booked-dot { background: #0277bd; }
+        .booked-mine .booked-time { color: #01579b; }
+
+        /* ── My bookings ── */
+        .booking-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        .booking-date {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--teal-dark);
+        }
+        .booking-time {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 4px 0;
+            font-family: 'DM Serif Display', serif;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .badge-pending { background: var(--warning-bg); color: var(--warning); }
+        .badge-confirmed { background: var(--success-bg); color: var(--success); }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .btn-cancel {
+            flex: 1;
+            padding: 8px;
+            border: 1.5px solid var(--danger);
+            background: none;
+            color: var(--danger);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-family: 'Noto Sans TC', sans-serif;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .btn-edit {
+            flex: 1;
+            padding: 8px;
+            border: 1.5px solid var(--teal);
+            background: none;
+            color: var(--teal);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-family: 'Noto Sans TC', sans-serif;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,50,60,0.45);
+            z-index: 200;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            display: none;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+        }
+        .modal-title { font-size: 17px; font-weight: 700; color: var(--teal-dark); margin-bottom: 16px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+        .btn-outline {
+            flex: 1;
+            padding: 12px;
+            border: 1.5px solid var(--border);
+            background: none;
+            color: var(--text-muted);
+            border-radius: var(--radius-sm);
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn-confirm {
+            flex: 1;
+            padding: 12px;
+            background: var(--teal);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* ── Empty / loading ── */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state svg { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px; }
+        .loading { text-align: center; padding: 30px; color: var(--text-muted); font-size: 14px; }
+        .dot-anim::after { content: '...'; animation: dots 1.2s infinite; }
+        @keyframes dots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+        }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-80px);
+            background: var(--teal-dark);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 999;
+            transition: transform 0.3s ease;
+            white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ── Profile ── */
+        .profile-avatar {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: var(--teal);
+            color: white;
+            font-size: 24px;
+            font-family: 'DM Serif Display', serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+        .profile-name { text-align: center; font-size: 20px; font-weight: 700; color: var(--teal-dark); }
+        .profile-sub { text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        .stat-row { display: flex; gap: 12px; margin-top: 16px; }
+        .stat-card {
+            flex: 1;
+            background: var(--teal-light);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-num { font-size: 28px; font-weight: 700; color: var(--teal-dark); font-family: 'DM Serif Display', serif; }
+        .stat-label { font-size: 12px; color: var(--teal-dark); opacity: 0.7; margin-top: 2px; }
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            border: 1.5px solid var(--border);
+            background: none;
+            color: var(--text-muted);
+            border-radius: var(--radius-sm);
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- Login -->
+<div id="login-page">
+    <div class="login-logo">
+        <h1>捷媖教練</h1>
+        <p>學員預約系統</p>
+    </div>
+    <div class="login-card">
+        <div class="form-group">
+            <label>手機帳號</label>
+            <input class="form-input" type="text" id="u" placeholder="請輸入帳號" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label>密碼</label>
+            <input class="form-input" type="password" id="p" placeholder="請輸入密碼" autocomplete="current-password">
+        </div>
+        <button class="btn-primary" onclick="login()">登入</button>
+    </div>
+</div>
+
+<!-- Main App (hidden until login) -->
+<div id="app" style="display:none;">
+    <div class="header">
+        <h1>捷媖教練</h1>
+        <p class="header-sub">學員預約系統</p>
+        <div class="user-chip" id="user-chip"></div>
+    </div>
+
+    <!-- 預約課程 -->
+    <div id="book-page" class="page container">
+        <div class="card">
+            <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                選擇日期
+            </div>
+            <div class="date-section">
+                <span class="date-label">預約日期</span>
+                <input class="date-input" type="date" id="searchDate" onchange="loadAvailableSlots()">
+            </div>
+        </div>
+        <div id="available-slots"></div>
+    </div>
+
+    <!-- 我的課程 -->
+    <div id="my-page" class="page container">
+        <div id="my-list"></div>
+    </div>
+
+    <!-- 個人 -->
+    <div id="profile-page" class="page container">
+        <div class="card" style="padding: 24px 16px;">
+            <div class="profile-avatar" id="profile-avatar"></div>
+            <div class="profile-name" id="profile-name"></div>
+            <div class="profile-sub" id="profile-sub"></div>
+            <div class="stat-row">
+                <div class="stat-card">
+                    <div class="stat-num" id="stat-hours">—</div>
+                    <div class="stat-label">剩餘堂數</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="stat-count">—</div>
+                    <div class="stat-label">已預約課程</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">登出</button>
+        </div>
+    </div>
+
+    <nav class="nav-bar" id="nav">
+        <div class="nav-item active" id="nav-book" onclick="showPage('book')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            預約課程
+        </div>
+        <div class="nav-item" id="nav-my" onclick="showPage('my')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            我的課程
+        </div>
+        <div class="nav-item" id="nav-profile" onclick="showPage('profile')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            個人資料
+        </div>
+    </nav>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-modal">
+    <div class="modal-box">
+        <div class="modal-title">修改預約時段</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;" id="edit-date-label"></p>
+        <div class="slot-picker">
+            <div>
+                <label>開始時間</label>
+                <select id="edit-sTime"></select>
+            </div>
+            <div>
+                <label>結束時間</label>
+                <select id="edit-eTime"></select>
+            </div>
+        </div>
+        <div id="edit-free-slots" style="font-size:12px;color:var(--text-muted);margin-top:8px;"></div>
+        <div class="modal-actions">
+            <button class="btn-outline" onclick="closeEditModal()">取消</button>
+            <button class="btn-confirm" onclick="confirmEdit()">確認修改</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbylgmHkp8C3h2KtigHx4w7zAtT_zgPWN4jGL6b1xKNHt-P7TehYYLZuzd2H4iOsvulq/exec";
+let currentUser = null;
+let editTarget = null;  // { date, start, end, studentUser }
+
+// ─── 時間工具 ───
+function toMins(t) {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+}
+function fromMins(m) {
+    return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+}
+
+/**
+ * 核心演算法：計算自由區間
+ * open: { start, end }  (e.g. 08:00~22:00)
+ * booked: [{ start, end }]  (已被預約的區間)
+ * return: [{ start, end }]  剩餘可用區間
+ */
+function calcFreeSlots(open, booked) {
+    const openStart = toMins(open.start);
+    const openEnd = toMins(open.end);
+
+    // 只保留與 open 區間有交集的預約，並排序
+    const merged = booked
+        .map(b => ({ s: Math.max(toMins(b.start), openStart), e: Math.min(toMins(b.end), openEnd) }))
+        .filter(b => b.s < b.e)
+        .sort((a, b) => a.s - b.s);
+
+    // 掃描空隙
+    const free = [];
+    let cursor = openStart;
+    for (const b of merged) {
+        if (cursor < b.s) free.push({ start: fromMins(cursor), end: fromMins(b.s) });
+        cursor = Math.max(cursor, b.e);
+    }
+    if (cursor < openEnd) free.push({ start: fromMins(cursor), end: fromMins(openEnd) });
+    return free;
+}
+
+// ─── 生成選項 ───
+function genOptions(start, end, step = 30) {
+    let opts = '';
+    let cur = toMins(start);
+    const stop = toMins(end);
+    while (cur <= stop) {
+        const t = fromMins(cur);
+        opts += `<option value="${t}">${t}</option>`;
+        cur += step;
+    }
+    return opts;
+}
+
+function genFreeOptions(freeSlots) {
+    let opts = '';
+    for (const seg of freeSlots) {
+        let cur = toMins(seg.start);
+        const stop = toMins(seg.end);
+        while (cur <= stop) {
+            const t = fromMins(cur);
+            opts += `<option value="${t}">${t}</option>`;
+            cur += 30;
+        }
+    }
+    return opts;
+}
+
+// ─── Toast ───
+function showToast(msg, duration = 2000) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ─── Login ───
+async function login() {
+    const u = document.getElementById('u').value.trim();
+    const p = document.getElementById('p').value.trim();
+    if (!u || !p) return showToast('請輸入帳號與密碼');
+    try {
+        const res = await fetch(`${GAS_URL}?type=getStudents`).then(r => r.json());
+        currentUser = res.find(s => String(s.user) === u && String(s.password) === p);
+        if (currentUser) {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('user-chip').textContent = `${currentUser.name} · 剩餘 ${currentUser.hours} 堂`;
+            initProfile();
+            showPage('book');
+        } else {
+            showToast('帳號或密碼錯誤');
+        }
+    } catch (e) {
+        showToast('連線失敗，請稍後再試');
+    }
+}
+
+function logout() {
+    currentUser = null;
+    document.getElementById('login-page').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('u').value = '';
+    document.getElementById('p').value = '';
+}
+
+function initProfile() {
+    const initials = currentUser.name.charAt(0);
+    document.getElementById('profile-avatar').textContent = initials;
+    document.getElementById('profile-name').textContent = currentUser.name;
+    document.getElementById('profile-sub').textContent = `帳號：${currentUser.user}`;
+    document.getElementById('stat-hours').textContent = currentUser.hours;
+}
+
+// ─── 頁面切換 ───
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    document.getElementById(pageId + '-page').classList.add('active');
+    document.getElementById('nav-' + pageId).classList.add('active');
+    if (pageId === 'book') {
+        const d = document.getElementById('searchDate').value;
+        if (d) loadAvailableSlots();
+    }
+    if (pageId === 'my') loadMySlots();
+}
+
+// ─── 載入可預約時段 ───
+async function loadAvailableSlots() {
+    const targetDate = document.getElementById('searchDate').value;
+    if (!targetDate) return;
+
+    const container = document.getElementById('available-slots');
+    container.innerHTML = `<div class="loading"><span class="dot-anim">查詢時段中</span></div>`;
+
+    const allSlots = await fetch(`${GAS_URL}?type=getSlots`).then(r => r.json());
+    const daySlots = allSlots.filter(s => s.date === targetDate);
+    const coachOpen = daySlots.find(s => s.status === 'open');
+    const bookedSlots = daySlots.filter(s => s.status === 'pending' || s.status === 'confirmed');
+
+    if (!coachOpen) {
+        container.innerHTML = `<div class="card" style="text-align:center;padding:30px;color:var(--text-muted);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;margin:0 auto 10px;display:block;opacity:0.4;"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <div style="font-size:14px;">教練今日未開放時段</div>
+            <div style="font-size:12px;margin-top:4px;">請選擇其他日期</div>
+        </div>`;
+        return;
+    }
+
+    const freeSlots = calcFreeSlots(coachOpen, bookedSlots);
+    const totalFree = freeSlots.reduce((sum, s) => sum + toMins(s.end) - toMins(s.start), 0);
+
+    // 時間軸視覺化
+    const openStart = toMins(coachOpen.start);
+    const openEnd = toMins(coachOpen.end);
+    const total = openEnd - openStart;
+
+    let timelineHTML = '';
+    let cursor = openStart;
+    const allSegments = [];
+    for (const b of bookedSlots.sort((a, z) => toMins(a.start) - toMins(z.start))) {
+        const bs = Math.max(toMins(b.start), openStart);
+        const be = Math.min(toMins(b.end), openEnd);
+        if (cursor < bs) allSegments.push({ type: 'free', s: cursor, e: bs });
+        if (bs < be) allSegments.push({ type: 'booked', s: bs, e: be, who: b.studentName || '' });
+        cursor = Math.max(cursor, be);
+    }
+    if (cursor < openEnd) allSegments.push({ type: 'free', s: cursor, e: openEnd });
+
+    for (const seg of allSegments) {
+        const pct = ((seg.e - seg.s) / total * 100).toFixed(1);
+        const label = `${fromMins(seg.s)}-${fromMins(seg.e)}`;
+        if (seg.type === 'free') {
+            timelineHTML += `<div class="timeline-free" style="width:${pct}%;" title="${label}">${pct > 15 ? label : ''}</div>`;
+        } else {
+            const isMine = seg.who === currentUser.name;
+            timelineHTML += `<div class="timeline-booked" style="width:${pct}%;" title="${label} 已預約">${pct > 10 ? '已預約' : ''}</div>`;
+        }
+    }
+
+    // 已預約清單
+    let bookedListHTML = '';
+    if (bookedSlots.length > 0) {
+        bookedListHTML = `<div class="booked-section">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:700;">已預約時段</div>`;
+        for (const b of bookedSlots.sort((a, z) => toMins(a.start) - toMins(z.start))) {
+            const isMine = String(b.studentUser) === String(currentUser.user);
+            bookedListHTML += `<div class="booked-item${isMine ? ' booked-mine' : ''}">
+                <div class="booked-dot"></div>
+                <div class="booked-time">${b.start} – ${b.end}</div>
+                <div class="booked-who">${isMine ? '我的預約' : '已被預約'}</div>
+            </div>`;
+        }
+        bookedListHTML += `</div>`;
+    }
+
+    // 預約表單
+    let formHTML = '';
+    if (freeSlots.length === 0) {
+        formHTML = `<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;">今日所有時段均已預約</div>`;
+    } else {
+        const freeDesc = freeSlots.map(s => `${s.start}–${s.end}`).join('、');
+        formHTML = `
+            <div style="font-size:12px;color:var(--success);background:var(--success-bg);padding:8px 10px;border-radius:6px;margin-bottom:10px;font-weight:500;">
+                可預約時段：${freeDesc}
+            </div>
+            <div class="slot-picker">
+                <div>
+                    <label>開始時間</label>
+                    <select id="sTime">${genFreeOptions(freeSlots)}</select>
+                </div>
+                <div>
+                    <label>結束時間</label>
+                    <select id="eTime">${genFreeOptions(freeSlots)}</select>
+                </div>
+            </div>
+            <button onclick="book('${targetDate}')" style="width:100%;padding:13px;background:var(--teal);color:white;border:none;border-radius:var(--radius-sm);font-family:'Noto Sans TC',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">確認預約</button>`;
+    }
+
+    container.innerHTML = `
+        <div class="card">
+            <div class="card-title" style="margin-bottom:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                教練開放時段
+            </div>
+            <div class="coach-range">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                ${coachOpen.start} – ${coachOpen.end}（共 ${Math.round(total/60)} 小時）
+            </div>
+            <div class="timeline-wrap">
+                <div class="timeline-label">時段使用狀況</div>
+                <div class="timeline-bar">${timelineHTML}</div>
+                <div class="time-axis">
+                    <span>${coachOpen.start}</span>
+                    <span style="color:var(--teal);font-size:9px;">▓ 可預約 ░ 已預約</span>
+                    <span>${coachOpen.end}</span>
+                </div>
+            </div>
+            ${bookedListHTML}
+        </div>
+        <div class="card">
+            <div class="card-title" style="margin-bottom:10px;">選擇您的時段</div>
+            ${formHTML}
+        </div>`;
+}
+
+// ─── 預約 ───
+function book(date) {
+    const s = document.getElementById('sTime').value;
+    const e = document.getElementById('eTime').value;
+    if (toMins(s) >= toMins(e)) return showToast('結束時間需晚於開始時間');
+    fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ type: 'bookSlot', date, start: s, end: e, studentName: currentUser.name, studentUser: currentUser.user })
+    }).then(() => {
+        showToast('預約已送出！等待教練確認');
+        showPage('my');
+    });
+}
+
+// ─── 我的課程 ───
+async function loadMySlots() {
+    const container = document.getElementById('my-list');
+    container.innerHTML = `<div class="loading"><span class="dot-anim">載入中</span></div>`;
+    const data = await fetch(`${GAS_URL}?type=getSlots`).then(r => r.json());
+    const my = data.filter(s => String(s.studentUser) === String(currentUser.user))
+        .sort((a, b) => a.date > b.date ? 1 : -1);
+
+    document.getElementById('stat-count').textContent = my.length;
+
+    if (my.length === 0) {
+        container.innerHTML = `<div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <div style="font-size:14px;">尚無預約紀錄</div>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = `<div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;padding-top:4px;font-weight:700;">共 ${my.length} 筆預約</div>` +
+        my.map(s => {
+            const isPending = s.status === 'pending';
+            const dur = Math.round((toMins(s.end) - toMins(s.start)) / 60 * 10) / 10;
+            return `<div class="booking-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div class="booking-date">${s.date}</div>
+                    <span class="badge ${isPending ? 'badge-pending' : 'badge-confirmed'}">${isPending ? '待確認' : '已確認'}</span>
+                </div>
+                <div class="booking-time">${s.start} – ${s.end}</div>
+                <div style="font-size:12px;color:var(--text-muted);">時長 ${dur} 小時</div>
+                ${isPending ? `<div class="action-row">
+                    <button class="btn-edit" onclick="openEditModal('${s.date}','${s.start}','${s.end}')">修改時段</button>
+                    <button class="btn-cancel" onclick="cancelBooking('${s.date}','${s.start}')">取消預約</button>
+                </div>` : ''}
+            </div>`;
+        }).join('');
+}
+
+// ─── 取消 ───
+function cancelBooking(date, start) {
+    if (!confirm('確定要取消此預約？')) return;
+    fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ type: 'cancelSlot', date, start, studentUser: currentUser.user })
+    }).then(() => {
+        showToast('預約已取消');
+        loadMySlots();
+    });
+}
+
+// ─── 修改 Modal ───
+async function openEditModal(date, start, end) {
+    editTarget = { date, start, end };
+    document.getElementById('edit-date-label').textContent = `日期：${date}`;
+
+    // 取得當天空閒時段（不含自己這筆）
+    const allSlots = await fetch(`${GAS_URL}?type=getSlots`).then(r => r.json());
+    const daySlots = allSlots.filter(s => s.date === date);
+    const coachOpen = daySlots.find(s => s.status === 'open');
+    const otherBooked = daySlots.filter(s =>
+        (s.status === 'pending' || s.status === 'confirmed') &&
+        !(String(s.studentUser) === String(currentUser.user) && s.start === start)
+    );
+
+    if (!coachOpen) { showToast('找不到該日期的教練時段'); return; }
+
+    const freeSlots = calcFreeSlots(coachOpen, otherBooked);
+    // 加回自己這筆
+    const withSelf = calcFreeSlots(coachOpen, otherBooked);  // already excludes self
+
+    const freeDesc = freeSlots.length > 0
+        ? '可選時段：' + freeSlots.map(s => `${s.start}–${s.end}`).join('、')
+        : '無其他可用時段';
+    document.getElementById('edit-free-slots').textContent = freeDesc;
+    document.getElementById('edit-sTime').innerHTML = genFreeOptions(freeSlots);
+    document.getElementById('edit-eTime').innerHTML = genFreeOptions(freeSlots);
+
+    // 預設選中原本時間
+    const sOpts = document.getElementById('edit-sTime').options;
+    const eOpts = document.getElementById('edit-eTime').options;
+    for (let i = 0; i < sOpts.length; i++) if (sOpts[i].value === start) sOpts[i].selected = true;
+    for (let i = 0; i < eOpts.length; i++) if (eOpts[i].value === end) eOpts[i].selected = true;
+
+    document.getElementById('edit-modal').classList.add('show');
+}
+
+function closeEditModal() {
+    document.getElementById('edit-modal').classList.remove('show');
+    editTarget = null;
+}
+
+function confirmEdit() {
+    const s = document.getElementById('edit-sTime').value;
+    const e = document.getElementById('edit-eTime').value;
+    if (toMins(s) >= toMins(e)) return showToast('結束時間需晚於開始時間');
+
+    // 先取消舊的，再新增新的
+    fetch(GAS_URL, {
+        method: 'POST', mode: 'no-cors',
+        body: JSON.stringify({ type: 'cancelSlot', date: editTarget.date, start: editTarget.start, studentUser: currentUser.user })
+    }).then(() => {
+        fetch(GAS_URL, {
+            method: 'POST', mode: 'no-cors',
+            body: JSON.stringify({ type: 'bookSlot', date: editTarget.date, start: s, end: e, studentName: currentUser.name, studentUser: currentUser.user })
+        }).then(() => {
+            showToast('預約已修改！等待教練確認');
+            closeEditModal();
+            loadMySlots();
+        });
+    });
+}
+</script>
+</body>
+</html>
