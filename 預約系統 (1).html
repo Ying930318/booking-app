@@ -566,11 +566,11 @@
     </div>
     <div class="login-card">
         <div class="form-group">
-            <label>手機號碼</label>
+            <label>帳號（大寫S+手機號碼）</label>
             <input class="form-input" type="text" id="u" placeholder="請輸入帳號" autocomplete="username">
         </div>
         <div class="form-group">
-            <label>密碼</label>
+            <label>密碼（預設1234）</label>
             <input class="form-input" type="password" id="p" placeholder="請輸入密碼" autocomplete="current-password">
         </div>
         <button class="btn-primary" onclick="login()">登入</button>
@@ -600,70 +600,13 @@
             </div>
         </div>
         <div id="available-slots"></div>
-
-        <div class="card">
-            <div class="card-title">固定每週預約</div>
-            <div class="weekly-grid">
-                <div class="form-group">
-                    <label>每週星期</label>
-                    <select class="form-input" id="weeklyDay">
-                        <option value="1">星期一</option>
-                        <option value="2">星期二</option>
-                        <option value="3">星期三</option>
-                        <option value="4">星期四</option>
-                        <option value="5">星期五</option>
-                        <option value="6">星期六</option>
-                        <option value="0">星期日</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>開始時間</label>
-                    <select class="form-input" id="weeklyStart"></select>
-                </div>
-                <div class="form-group">
-                    <label>預約堂數</label>
-                    <select class="form-input" id="weeklyCount">
-                        <option value="4">先預約 4 堂</option>
-                        <option value="8">先預約 8 堂</option>
-                        <option value="10" selected>預約剩餘堂數</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>開始日期</label>
-                    <input class="form-input" type="date" id="weeklyFrom">
-                </div>
-            </div>
-            <div class="helper-text">清場不可預約：每天 10:00–10:30；每週三、五 16:00–16:30。</div>
-            <button class="mini-btn" onclick="bookWeeklyFixed()">送出固定每週預約</button>
-            <div class="helper-text">例如：每週三 19:00，上課 1 小時。送出後會建立多筆「待確認」預約；教練確認後只是保留時段，等該堂課結束才會扣 1 堂。</div>
-        </div>
-
+        <button class="logout-btn" onclick="logout()">登出</button>
     </div>
 
     <!-- 我的課程 -->
     <div id="my-page" class="page container">
         <div id="lesson-summary"></div>
         <div id="lesson-table"></div>
-    </div>
-
-    <!-- 個人 -->
-    <div id="profile-page" class="page container">
-        <div class="card" style="padding: 24px 16px;">
-            <div class="profile-avatar" id="profile-avatar"></div>
-            <div class="profile-name" id="profile-name"></div>
-            <div class="profile-sub" id="profile-sub"></div>
-            <div class="stat-row">
-                <div class="stat-card">
-                    <div class="stat-num" id="stat-hours">—</div>
-                    <div class="stat-label">已購買課程堂數</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-num" id="stat-count">—</div>
-                    <div class="stat-label">剩餘課程堂數</div>
-                </div>
-            </div>
-            <button class="logout-btn" onclick="logout()">登出</button>
-        </div>
     </div>
 
     <nav class="nav-bar" id="nav">
@@ -675,10 +618,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
             我的課程
         </div>
-        <div class="nav-item" id="nav-profile" onclick="showPage('profile')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            個人資料
-        </div>
+
     </nav>
 </div>
 
@@ -718,18 +658,35 @@
 </div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbylgmHkp8C3h2KtigHx4w7zAtT_zgPWN4jGL6b1xKNHt-P7TehYYLZuzd2H4iOsvulq/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxitBtD0S_sNYqqc_ZyJbVEoTbpTWrcQ8sPnNquACPv0Z6CbD1w_eoBrBxJ6BBIgXw/exec";
 let currentUser = null;
 let editTarget = null;  // { date, start, end, studentUser }
 window.lessonRowsCache = [];
 
-const DEFAULT_TOTAL_LESSONS = 30; // 若 Excel 沒填總堂數，才用這個預設值
+const DEFAULT_TOTAL_LESSONS = 30; // 若 Excel 沒填總時數，才用這個預設值
 const WEEKDAY_TEXT = ['日', '一', '二', '三', '四', '五', '六'];
+
+// ─── 日期工具：全部用本地日期，避免週六被時區轉成其他天 ───
+function pad2(n) { return String(n).padStart(2, '0'); }
+function makeLocalDate(dateStr) {
+    const [y, m, d] = String(dateStr).split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
+function formatLocalDate(dateObj) {
+    return dateObj.getFullYear() + '-' + pad2(dateObj.getMonth() + 1) + '-' + pad2(dateObj.getDate());
+}
+function todayString() { return formatLocalDate(new Date()); }
+function addDays(date, days) {
+    const d = makeLocalDate(date);
+    d.setDate(d.getDate() + days);
+    return formatLocalDate(d);
+}
+function getWeekday(dateStr) { return makeLocalDate(dateStr).getDay(); }
 
 // ─── 清場不可預約時段 ───
 // 每天 10:00–10:30；每週三、五 16:00–16:30
 function getCleaningBreaks(date) {
-    const weekday = new Date(date + 'T00:00:00').getDay();
+    const weekday = getWeekday(date);
     const breaks = [
         { start: '10:00', end: '10:30', label: '清場' }
     ];
@@ -745,7 +702,7 @@ function overlapsCleaningBreak(date, start, end) {
     return getCleaningBreaks(date).some(b => overlaps(start, end, b.start, b.end));
 }
 function getCleaningText(date) {
-    const weekday = WEEKDAY_TEXT[new Date(date + 'T00:00:00').getDay()];
+    const weekday = WEEKDAY_TEXT[getWeekday(date)];
     return getCleaningBreaks(date).map(b => `週${weekday} ${b.start}–${b.end}`).join('、');
 }
 
@@ -767,24 +724,7 @@ async function refreshCurrentUser() {
         console.warn('更新學員堂數失敗', e);
     }
 }
-function addDays(date, days) {
-    const d = new Date(date + 'T00:00:00');
-    d.setDate(d.getDate() + days);
-    return d.toISOString().slice(0, 10);
-}
-function nextWeekdayDate(fromDate, weekday) {
-    const d = new Date(fromDate + 'T00:00:00');
-    const diff = (Number(weekday) - d.getDay() + 7) % 7;
-    d.setDate(d.getDate() + diff);
-    return d.toISOString().slice(0, 10);
-}
-function setupWeeklyControls() {
-    const weeklyStart = document.getElementById('weeklyStart');
-    if (weeklyStart && !weeklyStart.innerHTML) weeklyStart.innerHTML = genOptions('06:00', '21:00', 30);
-    const today = new Date().toISOString().slice(0, 10);
-    const weeklyFrom = document.getElementById('weeklyFrom');
-    if (weeklyFrom && !weeklyFrom.value) weeklyFrom.value = today;
-}
+
 
 
 // ─── 時間工具 ───
@@ -869,9 +809,8 @@ async function login() {
         if (currentUser) {
             document.getElementById('login-page').style.display = 'none';
             document.getElementById('app').style.display = 'block';
-            document.getElementById('user-chip').textContent = `${currentUser.name} · 剩餘 ${currentUser.hours} 堂`;
+            document.getElementById('user-chip').textContent = `${currentUser.name} · 剩餘 ${currentUser.hours} 小時`;
             initProfile();
-            setupWeeklyControls();
             showPage('book');
         } else {
             showToast('帳號或密碼錯誤');
@@ -890,12 +829,9 @@ function logout() {
 }
 
 function initProfile() {
-    const initials = currentUser.name.charAt(0);
-    document.getElementById('profile-avatar').textContent = initials;
-    document.getElementById('profile-name').textContent = currentUser.name;
-    document.getElementById('profile-sub').textContent = `帳號：${currentUser.user}`;
-    document.getElementById('stat-hours').textContent = getTotalLessons();
-    document.getElementById('stat-count').textContent = getRemainingLessons();
+    // 個人資料頁已移除；这里只更新上方使用者資訊
+    document.getElementById('user-chip').textContent =
+        `${currentUser.name} · 剩餘 ${getRemainingLessons()} 小時`;
 }
 
 // ─── 頁面切換 ───
@@ -1049,7 +985,9 @@ function book(date) {
     const s = document.getElementById('sTime').value;
     const e = document.getElementById('eTime').value;
     if (toMins(s) >= toMins(e)) return showToast('結束時間需晚於開始時間');
-    if (toMins(e) - toMins(s) !== 60) return showToast('目前設定為每堂 1 小時，請選擇剛好 1 小時');
+    const duration = (toMins(e) - toMins(s)) / 60;
+    if (duration < 0.5) return showToast('最少預約 0.5 小時');
+    if (duration > getRemainingLessons()) return showToast('剩餘時數不足，無法預約');
     if (overlapsCleaningBreak(date, s, e)) return showToast('此時段遇到清場時間，不能預約');
     fetch(GAS_URL, {
         method: 'POST',
@@ -1062,49 +1000,7 @@ function book(date) {
 }
 
 
-// ─── 固定每週預約 ───
-async function bookWeeklyFixed() {
-    const weekday = document.getElementById('weeklyDay').value;
-    const start = document.getElementById('weeklyStart').value;
-    const end = fromMins(toMins(start) + 60);
-    const fromDate = document.getElementById('weeklyFrom').value || new Date().toISOString().slice(0, 10);
-    const countSelect = Number(document.getElementById('weeklyCount').value);
 
-    const allSlots = await fetch(`${GAS_URL}?type=getSlots`).then(r => r.json());
-    const my = allSlots.filter(s => String(s.studentUser) === String(currentUser.user));
-    const remaining = getRemainingLessons();
-    const count = Math.min(countSelect, remaining || countSelect);
-    if (count <= 0) return showToast('目前沒有剩餘堂數可預約');
-
-    const firstDate = nextWeekdayDate(fromDate, weekday);
-
-    if (overlapsCleaningBreak(firstDate, start, end)) {
-        return showToast(`固定時段 ${start}–${end} 會遇到清場時間，不能預約`);
-    }
-
-    const requests = Array.from({ length: count }, (_, i) => ({
-        type: 'bookSlot',
-        date: addDays(firstDate, i * 7),
-        start,
-        end,
-        studentName: currentUser.name,
-        studentUser: currentUser.user,
-        fixedWeekly: true,
-        fixedWeekday: weekday
-    }));
-
-    if (!confirm(`確定要送出固定預約？
-每週${WEEKDAY_TEXT[weekday]} ${start}–${end}
-共 ${requests.length} 堂，皆需教練確認。
-
-提醒：每天 10:00–10:30、每週三/五 16:00–16:30 為清場不可預約。`)) return;
-
-    for (const req of requests) {
-        await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(req) });
-    }
-    showToast('固定每週預約已送出，等待教練確認');
-    showPage('my');
-}
 
 function normalizeAppointment(a) {
     const timeText = a.time || a.timeRange || '';
@@ -1193,22 +1089,18 @@ function buildLessonRows(records) {
 function renderLessonSummary(records) {
     const total = getTotalLessons();
     const remaining = getRemainingLessons();
+    const completedHours = Math.max(0, total - remaining);
     const pending = records.filter(s => s.status === 'pending').length;
     const confirmedFuture = records.filter(s => s.status === 'confirmed').length;
-    const completed = records.filter(s => s.status === 'completed').length;
 
-    document.getElementById('user-chip').textContent = `${currentUser.name} · 剩餘 ${remaining} 堂`;
-    document.getElementById('stat-hours').textContent = total;
-    document.getElementById('stat-count').textContent = remaining;
+    document.getElementById('user-chip').textContent = `${currentUser.name} · 剩餘 ${remaining} 小時`;
 
     document.getElementById('lesson-summary').innerHTML = `
-        <div class="lesson-summary">
-            <div class="lesson-pill"><strong>${total}</strong><span>購買堂數</span></div>
-            <div class="lesson-pill"><strong>${completed}</strong><span>已完成/已扣</span></div>
-            <div class="lesson-pill"><strong>${confirmedFuture}</strong><span>已確認未上</span></div>
-            <div class="lesson-pill"><strong>${remaining}</strong><span>剩餘堂數</span></div>
-        </div>
-        ${pending ? `<div class="helper-text" style="margin-bottom:10px;">目前有 ${pending} 堂等待教練確認，尚未扣堂。</div>` : ''}`;
+        <div class="lesson-summary" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="lesson-pill"><strong>${total}</strong><span>我的課程</span></div>
+            <div class="lesson-pill"><strong>${completedHours}</strong><span>已完成課程</span></div>
+            <div class="lesson-pill"><strong>${remaining}</strong><span>剩餘課程</span></div>
+        </div>`;
 }
 
 function renderLessonList(records) {
@@ -1219,7 +1111,7 @@ function renderLessonList(records) {
     const html = rows.map((item, idx) => {
         if (item.empty) {
             return `<div class="lesson-row lesson-empty" onclick="openLessonDetail(${idx})">
-                <div class="lesson-no">第${item.displayNo}堂</div>
+                <div class="lesson-no">第${item.displayNo}筆</div>
                 <div>
                     <div class="lesson-main">尚未預約</div>
                     <div class="lesson-sub">點擊後可查看狀態</div>
@@ -1229,13 +1121,13 @@ function renderLessonList(records) {
         }
 
         const sub = item.status === 'completed'
-            ? `已完成，Excel 剩餘：${item.remainingAfter !== '' ? item.remainingAfter : '—'} 堂`
+            ? `已完成`
             : item.status === 'confirmed'
-                ? '教練已確認；課程結束後才會扣堂'
-                : '等待教練確認；尚未扣堂';
+                ? '課程已確認，如需更改請私訊教練'
+                : '等待教練確認中...';
 
         return `<div class="lesson-row" onclick="openLessonDetail(${idx})">
-            <div class="lesson-no">第${item.displayNo}堂</div>
+            <div class="lesson-no">第${item.displayNo}筆</div>
             <div>
                 <div class="lesson-main">${item.date}　${item.start} – ${item.end}</div>
                 <div class="lesson-sub">${sub}</div>
@@ -1246,16 +1138,16 @@ function renderLessonList(records) {
 
     document.getElementById('lesson-table').innerHTML = `
         <div class="card">
-            <div class="card-title">${total}堂課預約清單</div>
+            <div class="card-title">課程預約紀錄</div>
             <div class="lesson-list">${html}</div>
-            <div class="helper-text">清單只顯示每一堂課的狀態；要取消或改時段，請點進單堂課明細。</div>
+            <div class="helper-text">清單只顯示每一筆課程狀態；要取消或改時段，請點進單筆課程明細。</div>
         </div>`;
 }
 
 function openLessonDetail(index) {
     const item = window.lessonRowsCache[index];
     if (!item) return;
-    document.getElementById('lesson-detail-title').textContent = `第${item.displayNo}堂課`;
+    document.getElementById('lesson-detail-title').textContent = `第${item.displayNo}筆課`;
 
     if (item.empty) {
         document.getElementById('lesson-detail-body').innerHTML = `
@@ -1266,8 +1158,7 @@ function openLessonDetail(index) {
         document.getElementById('lesson-detail-body').innerHTML = `
             <div class="detail-line"><strong>日期：</strong>${item.date}</div>
             <div class="detail-line"><strong>時間：</strong>${item.start} – ${item.end}</div>
-            <div class="detail-line"><strong>狀態：</strong>${statusText(item.status)}</div>
-            <div class="detail-line"><strong>扣堂說明：</strong>${item.status === 'completed' ? '此堂已完成並已扣堂。' : '此堂尚未完成，不會扣剩餘堂數。'}</div>`;
+            <div class="detail-line"><strong>狀態：</strong>${statusText(item.status)}</div>`;
 
         if (canModifyLesson(item)) {
             document.getElementById('lesson-detail-actions').innerHTML = `
@@ -1372,7 +1263,9 @@ function confirmEdit() {
     const s = document.getElementById('edit-sTime').value;
     const e = document.getElementById('edit-eTime').value;
     if (toMins(s) >= toMins(e)) return showToast('結束時間需晚於開始時間');
-    if (toMins(e) - toMins(s) !== 60) return showToast('目前設定為每堂 1 小時，請選擇剛好 1 小時');
+    const duration = (toMins(e) - toMins(s)) / 60;
+    if (duration < 0.5) return showToast('最少預約 0.5 小時');
+    if (duration > getRemainingLessons()) return showToast('剩餘時數不足，無法修改為此時長');
     if (overlapsCleaningBreak(editTarget.date, s, e)) return showToast('此時段遇到清場時間，不能預約');
 
     // 先取消舊的，再新增新的
@@ -1384,7 +1277,7 @@ function confirmEdit() {
             method: 'POST', mode: 'no-cors',
             body: JSON.stringify({ type: 'bookSlot', date: editTarget.date, start: s, end: e, studentName: currentUser.name, studentUser: currentUser.user })
         }).then(() => {
-            showToast('預約已修改！等待教練確認');
+            showToast('預約已修改！等待教練確認中...');
             closeEditModal();
             loadMySlots();
         });
