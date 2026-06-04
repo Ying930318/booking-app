@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>捷媖教練 · 學員系統</title>
+    <title>捷媖教練 · 課程預約系統</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -260,6 +260,17 @@
             white-space: nowrap;
             font-weight: 500;
         }
+        .timeline-clean {
+            background: #ffe0b2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #e65100;
+            overflow: hidden;
+            white-space: nowrap;
+            font-weight: 700;
+        }
         .timeline-free {
             background: #b2e4ea;
             display: flex;
@@ -503,6 +514,44 @@
             font-size: 14px;
             cursor: pointer;
         }
+
+
+        /* ── Weekly booking / lessons ── */
+        .helper-text { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-top: 8px; }
+        .weekly-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .weekly-grid .full { grid-column: 1 / -1; }
+        .mini-btn {
+            width: 100%; padding: 11px; border: 1.5px solid var(--teal); background: var(--white);
+            color: var(--teal); border-radius: var(--radius-sm); font-family: 'Noto Sans TC', sans-serif;
+            font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px;
+        }
+        .lesson-summary {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px;
+        }
+        .lesson-pill {
+            background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm);
+            padding: 10px; text-align: center;
+        }
+        .lesson-pill strong { display: block; font-size: 22px; color: var(--teal-dark); font-family: 'DM Serif Display', serif; }
+        .lesson-pill span { font-size: 11px; color: var(--text-muted); }
+        .lesson-list { display: grid; gap: 8px; }
+        .lesson-row {
+            display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: center;
+            padding: 11px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--white);
+            cursor: pointer; transition: transform 0.12s, border-color 0.2s;
+        }
+        .lesson-row:active { transform: scale(0.99); }
+        .lesson-row:hover { border-color: var(--teal-mid); }
+        .lesson-no { font-weight: 700; color: var(--teal-dark); font-size: 13px; }
+        .lesson-main { font-size: 13px; color: var(--text); }
+        .lesson-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .lesson-empty { color: var(--text-muted); }
+        .detail-line { font-size: 13px; color: var(--text); margin-bottom: 8px; line-height: 1.5; }
+        .detail-line strong { color: var(--teal-dark); }
+        .btn-danger-fill {
+            flex: 1; padding: 12px; background: var(--danger); color: white; border: none;
+            border-radius: var(--radius-sm); font-family: 'Noto Sans TC', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -513,15 +562,15 @@
 <div id="login-page">
     <div class="login-logo">
         <h1>捷媖教練</h1>
-        <p>學員預約系統</p>
+        <p>課程預約系統</p>
     </div>
     <div class="login-card">
         <div class="form-group">
-            <label>手機帳號</label>
+            <label>帳號（大寫S+手機號碼）</label>
             <input class="form-input" type="text" id="u" placeholder="請輸入帳號" autocomplete="username">
         </div>
         <div class="form-group">
-            <label>密碼</label>
+            <label>密碼（預設1234）</label>
             <input class="form-input" type="password" id="p" placeholder="請輸入密碼" autocomplete="current-password">
         </div>
         <button class="btn-primary" onclick="login()">登入</button>
@@ -551,31 +600,13 @@
             </div>
         </div>
         <div id="available-slots"></div>
+        <button class="logout-btn" onclick="logout()">登出</button>
     </div>
 
     <!-- 我的課程 -->
     <div id="my-page" class="page container">
-        <div id="my-list"></div>
-    </div>
-
-    <!-- 個人 -->
-    <div id="profile-page" class="page container">
-        <div class="card" style="padding: 24px 16px;">
-            <div class="profile-avatar" id="profile-avatar"></div>
-            <div class="profile-name" id="profile-name"></div>
-            <div class="profile-sub" id="profile-sub"></div>
-            <div class="stat-row">
-                <div class="stat-card">
-                    <div class="stat-num" id="stat-hours">—</div>
-                    <div class="stat-label">剩餘堂數</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-num" id="stat-count">—</div>
-                    <div class="stat-label">已預約課程</div>
-                </div>
-            </div>
-            <button class="logout-btn" onclick="logout()">登出</button>
-        </div>
+        <div id="lesson-summary"></div>
+        <div id="lesson-table"></div>
     </div>
 
     <nav class="nav-bar" id="nav">
@@ -587,11 +618,20 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
             我的課程
         </div>
-        <div class="nav-item" id="nav-profile" onclick="showPage('profile')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            個人資料
-        </div>
+
     </nav>
+</div>
+
+
+<!-- Lesson Detail Modal -->
+<div class="modal-overlay" id="lesson-detail-modal">
+    <div class="modal-box">
+        <div class="modal-title" id="lesson-detail-title">課程明細</div>
+        <div id="lesson-detail-body"></div>
+        <div class="modal-actions" id="lesson-detail-actions">
+            <button class="btn-outline" onclick="closeLessonDetail()">關閉</button>
+        </div>
+    </div>
 </div>
 
 <!-- Edit Modal -->
@@ -618,9 +658,74 @@
 </div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbylgmHkp8C3h2KtigHx4w7zAtT_zgPWN4jGL6b1xKNHt-P7TehYYLZuzd2H4iOsvulq/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbw1_8tKCkff3tftWqA7cYial1k26vhugn7BhGxISCQLBSmmyHzIAbMSjgG3iS_PpuF3/exec";
 let currentUser = null;
 let editTarget = null;  // { date, start, end, studentUser }
+window.lessonRowsCache = [];
+
+const DEFAULT_TOTAL_LESSONS = 30; // 若 Excel 沒填總時數，才用這個預設值
+const WEEKDAY_TEXT = ['日', '一', '二', '三', '四', '五', '六'];
+
+// ─── 日期工具：全部用本地日期，避免週六被時區轉成其他天 ───
+function pad2(n) { return String(n).padStart(2, '0'); }
+function makeLocalDate(dateStr) {
+    const [y, m, d] = String(dateStr).split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
+function formatLocalDate(dateObj) {
+    return dateObj.getFullYear() + '-' + pad2(dateObj.getMonth() + 1) + '-' + pad2(dateObj.getDate());
+}
+function todayString() { return formatLocalDate(new Date()); }
+function addDays(date, days) {
+    const d = makeLocalDate(date);
+    d.setDate(d.getDate() + days);
+    return formatLocalDate(d);
+}
+function getWeekday(dateStr) { return makeLocalDate(dateStr).getDay(); }
+
+// ─── 清場不可預約時段 ───
+// 每天 10:00–10:30；每週三、五 16:00–16:30
+function getCleaningBreaks(date) {
+    const weekday = getWeekday(date);
+    const breaks = [
+        { start: '10:00', end: '10:30', label: '清場' }
+    ];
+    if (weekday === 3 || weekday === 5) {
+        breaks.push({ start: '16:00', end: '16:30', label: '清場' });
+    }
+    return breaks;
+}
+function overlaps(aStart, aEnd, bStart, bEnd) {
+    return toMins(aStart) < toMins(bEnd) && toMins(aEnd) > toMins(bStart);
+}
+function overlapsCleaningBreak(date, start, end) {
+    return getCleaningBreaks(date).some(b => overlaps(start, end, b.start, b.end));
+}
+function getCleaningText(date) {
+    const weekday = WEEKDAY_TEXT[getWeekday(date)];
+    return getCleaningBreaks(date).map(b => `週${weekday} ${b.start}–${b.end}`).join('、');
+}
+
+function getTotalLessons() {
+    return Number(currentUser?.totalHours || currentUser?.totalLessons || currentUser?.purchased || currentUser?.hours || DEFAULT_TOTAL_LESSONS);
+}
+function getRemainingLessons() {
+    return Number(currentUser?.hours ?? getTotalLessons());
+}
+function getUsedLessons() {
+    return Math.max(0, getTotalLessons() - getRemainingLessons());
+}
+async function refreshCurrentUser() {
+    try {
+        const res = await fetch(`${GAS_URL}?type=getStudents`).then(r => r.json());
+        const latest = res.find(s => String(s.user) === String(currentUser.user));
+        if (latest) currentUser = { ...currentUser, ...latest };
+    } catch (e) {
+        console.warn('更新學員堂數失敗', e);
+    }
+}
+
+
 
 // ─── 時間工具 ───
 function toMins(t) {
@@ -704,7 +809,7 @@ async function login() {
         if (currentUser) {
             document.getElementById('login-page').style.display = 'none';
             document.getElementById('app').style.display = 'block';
-            document.getElementById('user-chip').textContent = `${currentUser.name} · 剩餘 ${currentUser.hours} 堂`;
+            document.getElementById('user-chip').textContent = `${currentUser.name} · 剩餘 ${currentUser.hours} 堂課`;
             initProfile();
             showPage('book');
         } else {
@@ -724,11 +829,9 @@ function logout() {
 }
 
 function initProfile() {
-    const initials = currentUser.name.charAt(0);
-    document.getElementById('profile-avatar').textContent = initials;
-    document.getElementById('profile-name').textContent = currentUser.name;
-    document.getElementById('profile-sub').textContent = `帳號：${currentUser.user}`;
-    document.getElementById('stat-hours').textContent = currentUser.hours;
+    // 個人資料頁已移除；这里只更新上方使用者資訊
+    document.getElementById('user-chip').textContent =
+        `${currentUser.name} · 剩餘 ${getRemainingLessons()} 堂課`;
 }
 
 // ─── 頁面切換 ───
@@ -756,6 +859,8 @@ async function loadAvailableSlots() {
     const daySlots = allSlots.filter(s => s.date === targetDate);
     const coachOpen = daySlots.find(s => s.status === 'open');
     const bookedSlots = daySlots.filter(s => s.status === 'pending' || s.status === 'confirmed');
+    const cleaningBreaks = getCleaningBreaks(targetDate);
+    const blockedSlots = [...bookedSlots, ...cleaningBreaks];
 
     if (!coachOpen) {
         container.innerHTML = `<div class="card" style="text-align:center;padding:30px;color:var(--text-muted);">
@@ -766,7 +871,7 @@ async function loadAvailableSlots() {
         return;
     }
 
-    const freeSlots = calcFreeSlots(coachOpen, bookedSlots);
+    const freeSlots = calcFreeSlots(coachOpen, blockedSlots);
     const totalFree = freeSlots.reduce((sum, s) => sum + toMins(s.end) - toMins(s.start), 0);
 
     // 時間軸視覺化
@@ -777,11 +882,15 @@ async function loadAvailableSlots() {
     let timelineHTML = '';
     let cursor = openStart;
     const allSegments = [];
-    for (const b of bookedSlots.sort((a, z) => toMins(a.start) - toMins(z.start))) {
+    const timelineBlocks = [
+        ...bookedSlots.map(b => ({ ...b, blockType: 'booked' })),
+        ...cleaningBreaks.map(b => ({ ...b, blockType: 'clean' }))
+    ].sort((a, z) => toMins(a.start) - toMins(z.start));
+    for (const b of timelineBlocks) {
         const bs = Math.max(toMins(b.start), openStart);
         const be = Math.min(toMins(b.end), openEnd);
         if (cursor < bs) allSegments.push({ type: 'free', s: cursor, e: bs });
-        if (bs < be) allSegments.push({ type: 'booked', s: bs, e: be, who: b.studentName || '' });
+        if (bs < be) allSegments.push({ type: b.blockType, s: bs, e: be, who: b.studentName || '' });
         cursor = Math.max(cursor, be);
     }
     if (cursor < openEnd) allSegments.push({ type: 'free', s: cursor, e: openEnd });
@@ -791,6 +900,8 @@ async function loadAvailableSlots() {
         const label = `${fromMins(seg.s)}-${fromMins(seg.e)}`;
         if (seg.type === 'free') {
             timelineHTML += `<div class="timeline-free" style="width:${pct}%;" title="${label}">${pct > 15 ? label : ''}</div>`;
+        } else if (seg.type === 'clean') {
+            timelineHTML += `<div class="timeline-clean" style="width:${pct}%;" title="${label} 清場">${pct > 8 ? '清場' : ''}</div>`;
         } else {
             const isMine = seg.who === currentUser.name;
             timelineHTML += `<div class="timeline-booked" style="width:${pct}%;" title="${label} 已預約">${pct > 10 ? '已預約' : ''}</div>`;
@@ -812,6 +923,11 @@ async function loadAvailableSlots() {
         }
         bookedListHTML += `</div>`;
     }
+
+    const cleaningHTML = `<div class="booked-section">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:700;">不可預約時段</div>
+        ${cleaningBreaks.map(b => `<div class="booked-item"><div class="booked-dot"></div><div class="booked-time">${b.start} – ${b.end}</div><div class="booked-who">清場</div></div>`).join('')}
+    </div>`;
 
     // 預約表單
     let formHTML = '';
@@ -851,11 +967,12 @@ async function loadAvailableSlots() {
                 <div class="timeline-bar">${timelineHTML}</div>
                 <div class="time-axis">
                     <span>${coachOpen.start}</span>
-                    <span style="color:var(--teal);font-size:9px;">▓ 可預約 ░ 已預約</span>
+                    <span style="color:var(--teal);font-size:9px;">▓ 可預約 ░ 已預約｜清場</span>
                     <span>${coachOpen.end}</span>
                 </div>
             </div>
             ${bookedListHTML}
+            ${cleaningHTML}
         </div>
         <div class="card">
             <div class="card-title" style="margin-bottom:10px;">選擇您的時段</div>
@@ -868,6 +985,10 @@ function book(date) {
     const s = document.getElementById('sTime').value;
     const e = document.getElementById('eTime').value;
     if (toMins(s) >= toMins(e)) return showToast('結束時間需晚於開始時間');
+    const duration = (toMins(e) - toMins(s)) / 60;
+    if (duration < 0.5) return showToast('最少預約 0.5 小時');
+    if (duration > getRemainingLessons()) return showToast('剩餘時數不足，無法預約');
+    if (overlapsCleaningBreak(date, s, e)) return showToast('此時段遇到清場時間，不能預約');
     fetch(GAS_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -878,41 +999,209 @@ function book(date) {
     });
 }
 
-// ─── 我的課程 ───
-async function loadMySlots() {
-    const container = document.getElementById('my-list');
-    container.innerHTML = `<div class="loading"><span class="dot-anim">載入中</span></div>`;
-    const data = await fetch(`${GAS_URL}?type=getSlots`).then(r => r.json());
-    const my = data.filter(s => String(s.studentUser) === String(currentUser.user))
-        .sort((a, b) => a.date > b.date ? 1 : -1);
 
-    document.getElementById('stat-count').textContent = my.length;
 
-    if (my.length === 0) {
-        container.innerHTML = `<div class="empty-state">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-            <div style="font-size:14px;">尚無預約紀錄</div>
-        </div>`;
-        return;
+
+function normalizeAppointment(a) {
+    const timeText = a.time || a.timeRange || '';
+    let start = a.start || '';
+    let end = a.end || '';
+    if ((!start || !end) && timeText.includes('-')) {
+        const parts = timeText.split('-').map(x => x.trim());
+        start = start || parts[0];
+        end = end || parts[1];
+    }
+    return {
+        date: a.date,
+        start,
+        end,
+        status: a.status || 'pending',
+        studentName: a.studentName || a.name || '',
+        studentUser: a.studentUser || a.user || '',
+        lessonNo: a.lessonNo || a.no || '',
+        remainingAfter: a.remainingAfter ?? ''
+    };
+}
+
+function appointmentKey(x) {
+    return `${x.date}|${x.start}|${x.studentUser || currentUser.user}`;
+}
+
+async function loadMyAppointments() {
+    const merged = new Map();
+
+    try {
+        const appts = await fetch(`${GAS_URL}?type=getAppointments&studentUser=${encodeURIComponent(currentUser.user)}`).then(r => r.json());
+        appts.map(normalizeAppointment).forEach(a => merged.set(appointmentKey(a), a));
+    } catch (e) {
+        console.warn('讀取 appointments 失敗', e);
     }
 
-    container.innerHTML = `<div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;padding-top:4px;font-weight:700;">共 ${my.length} 筆預約</div>` +
-        my.map(s => {
-            const isPending = s.status === 'pending';
-            const dur = Math.round((toMins(s.end) - toMins(s.start)) / 60 * 10) / 10;
-            return `<div class="booking-card">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div class="booking-date">${s.date}</div>
-                    <span class="badge ${isPending ? 'badge-pending' : 'badge-confirmed'}">${isPending ? '待確認' : '已確認'}</span>
+    // 兼容舊資料：如果以前 confirmed 只存在 slots，還是把它合併進「我的課程」
+    try {
+        const slots = await fetch(`${GAS_URL}?type=getSlots`).then(r => r.json());
+        slots.filter(s => String(s.studentUser) === String(currentUser.user))
+            .map(normalizeAppointment)
+            .forEach(s => {
+                const key = appointmentKey(s);
+                if (!merged.has(key)) merged.set(key, s);
+            });
+    } catch (e) {
+        console.warn('讀取 slots 失敗', e);
+    }
+
+    return Array.from(merged.values())
+        .filter(a => String(a.studentUser) === String(currentUser.user) || !a.studentUser)
+        .filter(a => a.status !== 'cancelled')
+        .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+}
+
+function statusText(status) {
+    if (status === 'pending') return '待確認';
+    if (status === 'confirmed') return '已確認';
+    if (status === 'completed') return '已完成';
+    if (status === 'cancelled') return '已取消';
+    return status || '未預約';
+}
+function statusBadgeClass(status) {
+    if (status === 'pending') return 'badge-pending';
+    if (status === 'confirmed' || status === 'completed') return 'badge-confirmed';
+    return '';
+}
+function canModifyLesson(item) {
+    if (!item || item.empty) return false;
+    if (item.status !== 'pending' && item.status !== 'confirmed') return false;
+    const lessonStart = new Date(`${item.date}T${item.start}:00+08:00`);
+    return lessonStart > new Date();
+}
+
+function buildLessonRows(records) {
+    const total = getTotalLessons();
+    const booked = records.filter(r => r.status !== 'cancelled');
+    const rows = [];
+    for (let i = 0; i < total; i++) {
+        const r = booked[i];
+        rows.push(r ? { ...r, displayNo: i + 1, empty: false } : { displayNo: i + 1, empty: true, status: 'empty' });
+    }
+    return rows;
+}
+
+function renderLessonSummary(records) {
+    const total = getTotalLessons();
+    const remaining = getRemainingLessons();
+    const completedHours = Math.max(0, total - remaining);
+    const pending = records.filter(s => s.status === 'pending').length;
+    const confirmedFuture = records.filter(s => s.status === 'confirmed').length;
+
+    document.getElementById('user-chip').textContent = `${currentUser.name} · 剩餘 ${remaining} 堂課`;
+
+    document.getElementById('lesson-summary').innerHTML = `
+        <div class="lesson-summary" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="lesson-pill"><strong>${total}</strong><span>我的課程</span></div>
+            <div class="lesson-pill"><strong>${completedHours}</strong><span>已完成課程</span></div>
+            <div class="lesson-pill"><strong>${remaining}</strong><span>剩餘課程</span></div>
+        </div>`;
+}
+
+function renderLessonList(records) {
+    const total = getTotalLessons();
+    const rows = buildLessonRows(records);
+    window.lessonRowsCache = rows;
+
+    const html = rows.map((item, idx) => {
+        if (item.empty) {
+            return `<div class="lesson-row lesson-empty" onclick="openLessonDetail(${idx})">
+                <div class="lesson-no">第${item.displayNo}筆</div>
+                <div>
+                    <div class="lesson-main">尚未預約</div>
+                    <div class="lesson-sub">點擊後可查看狀態</div>
                 </div>
-                <div class="booking-time">${s.start} – ${s.end}</div>
-                <div style="font-size:12px;color:var(--text-muted);">時長 ${dur} 小時</div>
-                ${isPending ? `<div class="action-row">
-                    <button class="btn-edit" onclick="openEditModal('${s.date}','${s.start}','${s.end}')">修改時段</button>
-                    <button class="btn-cancel" onclick="cancelBooking('${s.date}','${s.start}')">取消預約</button>
-                </div>` : ''}
+                <span class="badge" style="background:#eef3f4;color:var(--text-muted);">空堂</span>
             </div>`;
-        }).join('');
+        }
+
+        const sub = item.status === 'completed'
+            ? `已完成`
+            : item.status === 'confirmed'
+                ? '課程已確認，如需更改請私訊教練'
+                : '等待教練確認中...';
+
+        return `<div class="lesson-row" onclick="openLessonDetail(${idx})">
+            <div class="lesson-no">第${item.displayNo}堂</div>
+            <div>
+                <div class="lesson-main">${item.date}　${item.start} – ${item.end}</div>
+                <div class="lesson-sub">${sub}</div>
+            </div>
+            <span class="badge ${statusBadgeClass(item.status)}">${statusText(item.status)}</span>
+        </div>`;
+    }).join('');
+
+    document.getElementById('lesson-table').innerHTML = `
+        <div class="card">
+            <div class="card-title">課程預約紀錄</div>
+            <div class="lesson-list">${html}</div>
+            <div class="helper-text">如需取消或改時段，請點擊課程明細。</div>
+        </div>`;
+}
+
+function openLessonDetail(index) {
+    const item = window.lessonRowsCache[index];
+    if (!item) return;
+    document.getElementById('lesson-detail-title').textContent = `第${item.displayNo}筆課`;
+
+    if (item.empty) {
+        document.getElementById('lesson-detail-body').innerHTML = `
+            <div class="detail-line"><strong>狀態：</strong>尚未預約</div>
+            <div class="detail-line">請回到「預約課程」選擇日期與時段。</div>`;
+        document.getElementById('lesson-detail-actions').innerHTML = `<button class="btn-outline" onclick="closeLessonDetail()">關閉</button>`;
+    } else {
+        document.getElementById('lesson-detail-body').innerHTML = `
+            <div class="detail-line"><strong>日期：</strong>${item.date}</div>
+            <div class="detail-line"><strong>時間：</strong>${item.start} – ${item.end}</div>
+            <div class="detail-line"><strong>狀態：</strong>${statusText(item.status)}</div>`;
+
+        if (canModifyLesson(item)) {
+            document.getElementById('lesson-detail-actions').innerHTML = `
+                <button class="btn-outline" onclick="closeLessonDetail()">關閉</button>
+                <button class="btn-confirm" onclick="editLessonFromDetail(${index})">改時段</button>
+                <button class="btn-danger-fill" onclick="cancelLessonFromDetail(${index})">取消</button>`;
+        } else {
+            document.getElementById('lesson-detail-actions').innerHTML = `<button class="btn-outline" onclick="closeLessonDetail()">關閉</button>`;
+        }
+    }
+    document.getElementById('lesson-detail-modal').classList.add('show');
+}
+
+function closeLessonDetail() {
+    document.getElementById('lesson-detail-modal').classList.remove('show');
+}
+
+function editLessonFromDetail(index) {
+    const item = window.lessonRowsCache[index];
+    closeLessonDetail();
+    openEditModal(item.date, item.start, item.end);
+}
+
+function cancelLessonFromDetail(index) {
+    const item = window.lessonRowsCache[index];
+    closeLessonDetail();
+    cancelBooking(item.date, item.start);
+}
+
+// ─── 我的課程 ───
+async function loadMySlots() {
+    document.getElementById('lesson-summary').innerHTML = '';
+    document.getElementById('lesson-table').innerHTML = `<div class="loading"><span class="dot-anim">載入中</span></div>`;
+
+    // 嘗試觸發後端自動結案：已確認且結束時間已過的課程，才會扣堂
+    try {
+        fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: 'completePastLessons' }) });
+    } catch (e) {}
+
+    await refreshCurrentUser();
+    const records = await loadMyAppointments();
+    renderLessonSummary(records);
+    renderLessonList(records);
 }
 
 // ─── 取消 ───
@@ -941,17 +1230,18 @@ async function openEditModal(date, start, end) {
         (s.status === 'pending' || s.status === 'confirmed') &&
         !(String(s.studentUser) === String(currentUser.user) && s.start === start)
     );
+    const cleaningBreaks = getCleaningBreaks(date);
 
     if (!coachOpen) { showToast('找不到該日期的教練時段'); return; }
 
-    const freeSlots = calcFreeSlots(coachOpen, otherBooked);
+    const freeSlots = calcFreeSlots(coachOpen, [...otherBooked, ...cleaningBreaks]);
     // 加回自己這筆
     const withSelf = calcFreeSlots(coachOpen, otherBooked);  // already excludes self
 
     const freeDesc = freeSlots.length > 0
         ? '可選時段：' + freeSlots.map(s => `${s.start}–${s.end}`).join('、')
         : '無其他可用時段';
-    document.getElementById('edit-free-slots').textContent = freeDesc;
+    document.getElementById('edit-free-slots').textContent = `${freeDesc}｜清場不可約：${getCleaningText(date)}`;
     document.getElementById('edit-sTime').innerHTML = genFreeOptions(freeSlots);
     document.getElementById('edit-eTime').innerHTML = genFreeOptions(freeSlots);
 
@@ -973,6 +1263,10 @@ function confirmEdit() {
     const s = document.getElementById('edit-sTime').value;
     const e = document.getElementById('edit-eTime').value;
     if (toMins(s) >= toMins(e)) return showToast('結束時間需晚於開始時間');
+    const duration = (toMins(e) - toMins(s)) / 60;
+    if (duration < 0.5) return showToast('最少預約 0.5 小時');
+    if (duration > getRemainingLessons()) return showToast('剩餘時數不足，無法修改為此時長');
+    if (overlapsCleaningBreak(editTarget.date, s, e)) return showToast('此時段遇到清場時間，不能預約');
 
     // 先取消舊的，再新增新的
     fetch(GAS_URL, {
@@ -983,7 +1277,7 @@ function confirmEdit() {
             method: 'POST', mode: 'no-cors',
             body: JSON.stringify({ type: 'bookSlot', date: editTarget.date, start: s, end: e, studentName: currentUser.name, studentUser: currentUser.user })
         }).then(() => {
-            showToast('預約已修改！等待教練確認');
+            showToast('預約已修改！等待教練確認中...');
             closeEditModal();
             loadMySlots();
         });
